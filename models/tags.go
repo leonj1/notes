@@ -45,7 +45,7 @@ func (t Tag) Save(tag Tag) (error){
 	if tag.Id == 0 {
 		sql = fmt.Sprintf("INSERT INTO %s (key, value, create_date) VALUES ('%s', %t, %t)", TagsTable, tag.Key, tag.Value, tag.CreateDate)
 	} else {
-		sql = fmt.Sprintf("UPDATE %s SET key='%s', value='%s', create_date=%t WHERE id=%d", TagsTable, tag.Key, tag.Value, tag.Id)
+		sql = fmt.Sprintf("UPDATE %s SET key='%s', value='%s', create_date=%t WHERE id=%d", TagsTable, tag.Key, tag.Value, tag.CreateDate, tag.Id)
 	}
 
 	rows, err := db.Query(sql)

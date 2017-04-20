@@ -43,7 +43,7 @@ func (db *DB) AllNotes() ([]*Note, error) {
 func (n Note) Save(note Note) (error){
 	var sql string
 	if note.Id == 0 {
-		sql = fmt.Sprintf("INSERT INTO %s (note, create_date, expiration_date) VALUES ('%s', %t, %t)", NotesTable, note.Id, note.Note, note.CreateDate, note.ExpirationDate)
+		sql = fmt.Sprintf("INSERT INTO %s (note, create_date, expiration_date) VALUES ('%s', %t, %t)", NotesTable, note.Note, note.CreateDate, note.ExpirationDate)
 	} else {
 		sql = fmt.Sprintf("UPDATE %s SET note='%s', create_date=%t, expiration_date=%t WHERE id=%d", NotesTable, note.Note, note.CreateDate, note.ExpirationDate, note.Id)
 	}
