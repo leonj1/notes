@@ -5,22 +5,13 @@ import (
 	"fmt"
 	"database/sql"
 	"flag"
-	"net/http"
 	"notes/models"
-	"github.com/julienschmidt/httprouter"
+	"github.com/plimble/ace"
 	_ "github.com/go-sql-driver/mysql"
 )
 
 type Env struct {
 	db *sql.DB
-}
-
-func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	fmt.Fprint(w, "Welcome!\n")
-}
-
-func Hello(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	fmt.Fprintf(w, "hello, %s!\n", ps.ByName("name"))
 }
 
 func main() {
@@ -35,13 +26,25 @@ func main() {
 	log.Println(fmt.Sprintf("ConnectionString: %s", connectionString))
 	models.InitDB(connectionString)
 
-	//env := &Env{db: db}
+	a := ace.New()
 
-	log.Println(fmt.Sprintf("Listening on port: %s", *serverPort))
+	a.GET("/:name", func(c *ace.C) {
+		name := c.Param("name")
+		c.JSON(200, map[string]string{"hello": name})
+	})
 
-	router := httprouter.New()
-	router.GET("/", Index)
-	router.GET("/hello/:name", Hello)
+	a.POST("/form/:id/:name", func(c *ace.C) {
+		//id := c.Param("id")
+		//name := c.Param("name")
+		//age := c.Request.PostFormValue("age")
 
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", *serverPort), router))
+		data := struct{
+			Name string `json:"name"`
+		}{
+			Name: "John Doe",
+		}
+		c.JSON(200, data)
+	})
+
+	a.Run(fmt.Sprintf(":%s", *serverPort))
 }
