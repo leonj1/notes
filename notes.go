@@ -14,6 +14,19 @@ type Env struct {
 	db *sql.DB
 }
 
+func PostNote(c *ace.C) {
+	//id := c.Param("id")
+	//name := c.Param("name")
+	//age := c.Request.PostFormValue("age")
+
+	data := struct{
+		Name string `json:"name"`
+	}{
+		Name: "John Doe",
+	}
+	c.JSON(200, data)
+}
+
 func main() {
 	var userName = flag.String("user", "", "db username")
 	var password = flag.String("pass", "", "db password")
@@ -33,18 +46,7 @@ func main() {
 		c.JSON(200, map[string]string{"hello": name})
 	})
 
-	a.POST("/form/:id/:name", func(c *ace.C) {
-		//id := c.Param("id")
-		//name := c.Param("name")
-		//age := c.Request.PostFormValue("age")
-
-		data := struct{
-			Name string `json:"name"`
-		}{
-			Name: "John Doe",
-		}
-		c.JSON(200, data)
-	})
+	a.POST("/form/:id/:name", PostNote)
 
 	a.Run(fmt.Sprintf(":%s", *serverPort))
 }
