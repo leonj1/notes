@@ -15,14 +15,18 @@ type Env struct {
 }
 
 func PostNote(c *ace.C) {
-	//id := c.Param("id")
-	//name := c.Param("name")
-	//age := c.Request.PostFormValue("age")
+	id := c.Param("id")
+	name := c.Param("name")
+	age := c.Request.PostFormValue("age")
 
 	data := struct{
+		Id string `json:"id"`
 		Name string `json:"name"`
+		Age string `json:"age"`
 	}{
-		Name: "John Doe",
+		Id: id,
+		Name: name,
+		Age: age,
 	}
 	c.JSON(200, data)
 }
