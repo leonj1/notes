@@ -21,13 +21,13 @@ func AddNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	note.Id, err = note.Save()
+	n, err := note.Save()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	js, err := json.Marshal(note)
+	js, err := json.Marshal(&n)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

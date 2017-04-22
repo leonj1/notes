@@ -3,7 +3,6 @@ package models
 import (
 	"time"
 	"fmt"
-	"log"
 )
 
 const NotesTable = "notes"
@@ -41,29 +40,27 @@ func (db *DB) AllNotes() ([]*Note, error) {
 	return bks, nil
 }
 
-func (note Note) Save() (int64, error){
+func (note Note) Save() (*Note, error){
 	var sql string
 	if note.Id == 0 {
 		note.CreateDate = time.Now()
-		sql = fmt.Sprintf("INSERT INTO %s (note, create_date, expiration_date) VALUES ('%s', '%s', '%s')", NotesTable, note.Note, note.CreateDate, note.ExpirationDate)
+		note.CreateDate.Format(time.RFC3339)
+		sql = fmt.Sprintf("INSERT INTO %s (note, create_date, expiration_date) VALUES (?,?,?)", NotesTable)
 	} else {
-		sql = fmt.Sprintf("UPDATE %s SET note='%s', create_date='%s', expiration_date='%s' WHERE id=%d", NotesTable, note.Note, note.CreateDate, note.ExpirationDate, note.Id)
+		sql = fmt.Sprintf("UPDATE %s SET note=?, create_date=?, expiration_date=? WHERE id=%d", NotesTable, note.Id)
 	}
 
-	// TODO Delete me since its for debugging
-	log.Println(sql)
-
-	res, err := db.Exec(sql)
+	res, err := db.Exec(sql, note.Note, note.CreateDate, note.ExpirationDate)
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 
 	if note.Id == 0 {
 		note.Id, err = res.LastInsertId()
 		if err != nil {
-			return 0, err
+			return nil, err
 		}
 	}
 
-	return note.Id, nil
+	return &note, nil
 }
