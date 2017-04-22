@@ -66,7 +66,7 @@ func (tag Tag) Save() (*Tag, error){
 	return &tag, nil
 }
 
-func (tag Tag) FindByKeyValueNoteId(key string, value string, noteId int64) (*[]Tag, error) {
+func (tag Tag) FindByKeyAndValueAndNoteId(key string, value string, noteId int64) (*[]Tag, error) {
 	if key == "" || value == "" || noteId < 1 {
 		return nil, errors.New("Please provide key, value, and noteId")
 	}

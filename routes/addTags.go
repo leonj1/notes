@@ -18,7 +18,7 @@ func AddTags(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tags, err := tag.FindByKeyValueNoteId(tag.Key, tag.Value, tag.NoteId)
+	tags, err := tag.FindByKeyAndValueAndNoteId(tag.Key, tag.Value, tag.NoteId)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
