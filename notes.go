@@ -6,29 +6,38 @@ import (
 	"database/sql"
 	"flag"
 	"notes/models"
-	"github.com/plimble/ace"
 	_ "github.com/go-sql-driver/mysql"
+	"net/http"
+	"encoding/json"
 )
 
 type Env struct {
 	db *sql.DB
 }
 
-func PostNote(c *ace.C) {
-	id := c.Param("id")
-	name := c.Param("name")
-	age := c.Request.PostFormValue("age")
+const ContentType = "Content-Type"
+const JSON = "application/json"
 
-	data := struct{
-		Id string `json:"id"`
-		Name string `json:"name"`
-		Age string `json:"age"`
-	}{
-		Id: id,
-		Name: name,
-		Age: age,
+func foo(w http.ResponseWriter, r *http.Request) {
+	var n models.Note
+	if r.Body == nil {
+		http.Error(w, "Please send a request body", 400)
+		return
 	}
-	c.JSON(200, data)
+	err := json.NewDecoder(r.Body).Decode(&n)
+	if err != nil {
+		http.Error(w, err.Error(), 400)
+		return
+	}
+
+	js, err := json.Marshal(n)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set(ContentType, JSON)
+	w.Write(js)
 }
 
 func main() {
@@ -43,14 +52,7 @@ func main() {
 	log.Println(fmt.Sprintf("ConnectionString: %s", connectionString))
 	models.InitDB(connectionString)
 
-	a := ace.New()
+	http.HandleFunc("/", foo)
 
-	a.GET("/:name", func(c *ace.C) {
-		name := c.Param("name")
-		c.JSON(200, map[string]string{"hello": name})
-	})
-
-	a.POST("/form/:id/:name", PostNote)
-
-	a.Run(fmt.Sprintf(":%s", *serverPort))
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", *serverPort), nil))
 }
