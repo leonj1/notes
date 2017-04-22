@@ -51,7 +51,7 @@ func (note Note) Save() (*Note, error){
 		sql = fmt.Sprintf("UPDATE %s SET note=?, creator=?, create_date=?, expiration_date=? WHERE id=%d", NotesTable, note.Id)
 	}
 
-	res, err := db.Exec(sql, note.Note, note.CreateDate, note.ExpirationDate)
+	res, err := db.Exec(sql, note.Note, note.Creator, note.CreateDate, note.ExpirationDate)
 	if err != nil {
 		return nil, err
 	}
