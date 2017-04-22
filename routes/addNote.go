@@ -10,18 +10,24 @@ const ContentType = "Content-Type"
 const JSON = "application/json"
 
 func AddNote(w http.ResponseWriter, r *http.Request) {
-	var n models.Note
+	var note models.Note
 	if r.Body == nil {
 		http.Error(w, "Please send a request body", 400)
 		return
 	}
-	err := json.NewDecoder(r.Body).Decode(&n)
+	err := json.NewDecoder(r.Body).Decode(&note)
 	if err != nil {
 		http.Error(w, err.Error(), 400)
 		return
 	}
 
-	js, err := json.Marshal(n)
+	note.Id, err = note.Save()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	js, err := json.Marshal(note)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

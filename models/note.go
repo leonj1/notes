@@ -3,12 +3,13 @@ package models
 import (
 	"time"
 	"fmt"
+	"log"
 )
 
 const NotesTable = "notes"
 
 type Note struct {
-	Id 		int
+	Id 		int64
 	Note 		string
 	CreateDate 	time.Time
 	ExpirationDate 	time.Time
@@ -40,19 +41,29 @@ func (db *DB) AllNotes() ([]*Note, error) {
 	return bks, nil
 }
 
-func (n Note) Save(note Note) (error){
+func (note Note) Save() (int64, error){
 	var sql string
 	if note.Id == 0 {
-		sql = fmt.Sprintf("INSERT INTO %s (note, create_date, expiration_date) VALUES ('%s', %t, %t)", NotesTable, note.Note, note.CreateDate, note.ExpirationDate)
+		note.CreateDate = time.Now()
+		sql = fmt.Sprintf("INSERT INTO %s (note, create_date, expiration_date) VALUES ('%s', '%s', '%s')", NotesTable, note.Note, note.CreateDate, note.ExpirationDate)
 	} else {
-		sql = fmt.Sprintf("UPDATE %s SET note='%s', create_date=%t, expiration_date=%t WHERE id=%d", NotesTable, note.Note, note.CreateDate, note.ExpirationDate, note.Id)
+		sql = fmt.Sprintf("UPDATE %s SET note='%s', create_date='%s', expiration_date='%s' WHERE id=%d", NotesTable, note.Note, note.CreateDate, note.ExpirationDate, note.Id)
 	}
-	rows, err := db.Query(sql)
+
+	// TODO Delete me since its for debugging
+	log.Println(sql)
+
+	res, err := db.Exec(sql)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	defer rows.Close()
+	if note.Id == 0 {
+		note.Id, err = res.LastInsertId()
+		if err != nil {
+			return 0, err
+		}
+	}
 
-	return nil
+	return note.Id, nil
 }
