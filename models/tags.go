@@ -3,6 +3,7 @@ package models
 import (
 	"time"
 	"fmt"
+	"github.com/kataras/go-errors"
 )
 
 const TagsTable = "tags"
@@ -63,4 +64,29 @@ func (tag Tag) Save() (*Tag, error){
 	}
 
 	return &tag, nil
+}
+
+func (tag Tag) FindByKeyValueNoteId(key string, value string, noteId int64) (*[]Tag, error) {
+	if key == "" || value == "" || noteId < 1 {
+		return nil, errors.New("Please provide key, value, and noteId")
+	}
+
+	sql := fmt.Sprintf("select * from %s where key=? and value=? and note_id=?", TagsTable)
+	rows, err := db.Query(sql, key, value, noteId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var tags []Tag
+	for rows.Next() {
+		t := new(Tag)
+		err := rows.Scan(&t.Id, &t.NoteId, &t.Creator, &t.Key, &t.Value, &t.CreateDate)
+		if err != nil {
+			return nil, errors.New("Problem reading row")
+		}
+		tags = append(tags, *t)
+	}
+
+	return &tags, nil
 }

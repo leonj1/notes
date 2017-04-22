@@ -18,9 +18,21 @@ func AddTags(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	tags, err := tag.FindByKeyValueNoteId(tag.Key, tag.Value, tag.NoteId)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if len(*tags) > 0 {
+		http.Error(w, "Tag already exists for this node", http.StatusBadRequest)
+		return
+	}
+
 	saved, err := tag.Save()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 
 	js, err := json.Marshal(&saved)
