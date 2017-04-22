@@ -30,8 +30,8 @@ func main() {
 	// intentionally not using a router framework since this is intended to be a microservice
 	http.HandleFunc("/addNote", routes.AddNote)
 	http.HandleFunc("/addTags", routes.AddTags)
-	http.HandleFunc("/getActiveNotes", routes.GetActiveNotes)
-	http.HandleFunc("/search", routes.Search)
+	//http.HandleFunc("/getActiveNotes", routes.GetActiveNotes)
+	//http.HandleFunc("/search", routes.Search)
 
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", *serverPort), nil))
 }

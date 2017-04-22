@@ -8,7 +8,9 @@ import (
 const TagsTable = "tags"
 
 type Tag struct {
-	Id 		int
+	Id 		int64
+	NoteId		int64
+	Creator		string
 	Key 		string
 	Value 		string
 	CreateDate 	time.Time
@@ -40,21 +42,25 @@ func (db *DB) AllTags() ([]*Tag, error) {
 	return bks, nil
 }
 
-func (t Tag) Save(tag Tag) (error){
+func (tag Tag) Save() (*Tag, error){
 	var sql string
 	if tag.Id == 0 {
-		sql = fmt.Sprintf("INSERT INTO %s (key, value, create_date) VALUES ('%s', %t, %t)", TagsTable, tag.Key, tag.Value, tag.CreateDate)
+		sql = fmt.Sprintf("INSERT INTO %s (key, value, creator, create_date) VALUES (?,?,?,?)", TagsTable)
 	} else {
-		sql = fmt.Sprintf("UPDATE %s SET key='%s', value='%s', create_date=%t WHERE id=%d", TagsTable, tag.Key, tag.Value, tag.CreateDate, tag.Id)
+		sql = fmt.Sprintf("UPDATE %s SET key=?, value=?, creator=?, create_date=? WHERE id=%d", TagsTable, tag.Id)
 	}
 
-	rows, err := db.Query(sql)
-
+	res, err := db.Exec(sql, tag.Key, tag.Value, tag.CreateDate)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	defer rows.Close()
+	if tag.Id == 0 {
+		tag.Id, err = res.LastInsertId()
+		if err != nil {
+			return nil, err
+		}
+	}
 
-	return nil
+	return &tag, nil
 }

@@ -10,6 +10,7 @@ const NotesTable = "notes"
 type Note struct {
 	Id 		int64
 	Note 		string
+	Creator		string
 	CreateDate 	time.Time
 	ExpirationDate 	time.Time
 }
@@ -45,9 +46,9 @@ func (note Note) Save() (*Note, error){
 	if note.Id == 0 {
 		note.CreateDate = time.Now()
 		note.CreateDate.Format(time.RFC3339)
-		sql = fmt.Sprintf("INSERT INTO %s (note, create_date, expiration_date) VALUES (?,?,?)", NotesTable)
+		sql = fmt.Sprintf("INSERT INTO %s (note, creator, create_date, expiration_date) VALUES (?,?,?,?)", NotesTable)
 	} else {
-		sql = fmt.Sprintf("UPDATE %s SET note=?, create_date=?, expiration_date=? WHERE id=%d", NotesTable, note.Id)
+		sql = fmt.Sprintf("UPDATE %s SET note=?, creator=?, create_date=?, expiration_date=? WHERE id=%d", NotesTable, note.Id)
 	}
 
 	res, err := db.Exec(sql, note.Note, note.CreateDate, note.ExpirationDate)
