@@ -13,6 +13,7 @@ type Note struct {
 	Creator		string
 	CreateDate 	time.Time
 	ExpirationDate 	time.Time
+	Tags            *[]Tag
 }
 
 func (note Note) AllNotes() ([]*Note, error) {
@@ -81,6 +82,11 @@ func (note Note) GetActiveNotes() ([]*Note, error) {
 	for rows.Next() {
 		note := new(Note)
 		err := rows.Scan(&note.Id, &note.Note, &note.Creator, &note.CreateDate, &note.ExpirationDate)
+		if err != nil {
+			return nil, err
+		}
+		t := new(Tag)
+		note.Tags, err = t.FindByNoteId(note.Id)
 		if err != nil {
 			return nil, err
 		}
