@@ -23,7 +23,7 @@ func (note Note) AllNotes() ([]*Note, error) {
 	}
 	defer rows.Close()
 
-	bks := make([]*Note, 0)
+	notes := make([]*Note, 0)
 
 	for rows.Next() {
 		note := new(Note)
@@ -31,14 +31,14 @@ func (note Note) AllNotes() ([]*Note, error) {
 		if err != nil {
 			return nil, err
 		}
-		bks = append(bks, note)
+		notes = append(notes, note)
 	}
 
 	if err = rows.Err(); err != nil {
 		return nil, err
 	}
 
-	return bks, nil
+	return notes, nil
 }
 
 func (note Note) Save() (*Note, error){
@@ -64,4 +64,30 @@ func (note Note) Save() (*Note, error){
 	}
 
 	return &note, nil
+}
+
+func (note Note) GetActiveNotes() ([]*Note, error) {
+	sql := fmt.Sprintf("SELECT * from %s where exiration_date !='0000-00-00 00:00:00", NotesTable)
+	rows, err := db.Query(sql)
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+
+	notes := make([]*Note, 0)
+
+	for rows.Next() {
+		note := new(Note)
+		err := rows.Scan(&note.Id, &note.Note)
+		if err != nil {
+			return nil, err
+		}
+		notes = append(notes, note)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return notes, nil
 }

@@ -18,7 +18,13 @@ func GetActiveNotes(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	js, err := json.Marshal(n)
+	notes, err := n.GetActiveNotes()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	js, err := json.Marshal(notes)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
