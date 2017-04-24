@@ -24,7 +24,6 @@ func main() {
 
 	// open connection to db
 	connectionString := fmt.Sprintf("%s:%s@/%s?parseTime=true", *userName, *password, *databaseName)
-	log.Println(fmt.Sprintf("ConnectionString: %s", connectionString))
 	models.InitDB(connectionString)
 
 	// intentionally not using a router framework since this is intended to be a microservice
@@ -33,5 +32,6 @@ func main() {
 	http.HandleFunc("/getActiveNotes", routes.GetActiveNotes)
 	//http.HandleFunc("/search", routes.Search)
 
+	log.Println("Starting web server")
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", *serverPort), nil))
 }

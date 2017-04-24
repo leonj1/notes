@@ -67,18 +67,20 @@ func (note Note) Save() (*Note, error){
 }
 
 func (note Note) GetActiveNotes() ([]*Note, error) {
-	sql := fmt.Sprintf("SELECT * from %s where exiration_date !='0000-00-00 00:00:00", NotesTable)
-	rows, err := db.Query(sql)
+	currentTime := time.Now()
+	currentTime.Format(time.RFC3339)
+	sql := fmt.Sprintf("SELECT `id`, `note`, `creator`, `create_date`, `expiration_date` from %s where `expiration_date` = '0000-00-00 00:00:00' or expiration_date > ?", NotesTable)
+	rows, err := db.Query(sql, currentTime)
 	if err != nil {
 		return nil, err
 	}
-	defer db.Close()
+	defer rows.Close()
 
 	notes := make([]*Note, 0)
 
 	for rows.Next() {
 		note := new(Note)
-		err := rows.Scan(&note.Id, &note.Note)
+		err := rows.Scan(&note.Id, &note.Note, &note.Creator, &note.CreateDate, &note.ExpirationDate)
 		if err != nil {
 			return nil, err
 		}
