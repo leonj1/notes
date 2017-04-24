@@ -9,15 +9,15 @@ import (
 const TagsTable = "tags"
 
 type Tag struct {
-	Id 		int64
-	NoteId		int64
-	Creator		string
-	Key 		string
-	Value 		string
+	Id 		int64		`json:"id,string,omitempty"`
+	NoteId		int64		`json:"note_id,string,omitempty"`
+	Creator		string		`json:"creator,omitempty"`
+	Key 		string		`json:"key,omitempty"`
+	Value 		string		`json:"value,omitempty"`
 	CreateDate 	time.Time
 }
 
-func (db *DB) AllTags() ([]*Tag, error) {
+func (tag Tag) AllTags() ([]*Tag, error) {
 	sql := fmt.Sprintf("SELECT * from %s", TagsTable)
 	rows, err := db.Query(sql)
 	if err != nil {
@@ -46,12 +46,14 @@ func (db *DB) AllTags() ([]*Tag, error) {
 func (tag Tag) Save() (*Tag, error){
 	var sql string
 	if tag.Id == 0 {
-		sql = fmt.Sprintf("INSERT INTO %s (key, value, creator, create_date) VALUES (?,?,?,?)", TagsTable)
+		tag.CreateDate = time.Now()
+		tag.CreateDate.Format(time.RFC3339)
+		sql = fmt.Sprintf("INSERT INTO %s (`key`, `value`, `note_id`, `creator`, `create_date`) VALUES (?,?,?,?,?)", TagsTable)
 	} else {
-		sql = fmt.Sprintf("UPDATE %s SET key=?, value=?, creator=?, create_date=? WHERE id=%d", TagsTable, tag.Id)
+		sql = fmt.Sprintf("UPDATE %s SET `key`=?, `value`=?, `note_id`, `creator`=?, `create_date`=? WHERE `id`=%d", TagsTable, tag.Id)
 	}
 
-	res, err := db.Exec(sql, tag.Key, tag.Value, tag.CreateDate)
+	res, err := db.Exec(sql, tag.Key, tag.Value, tag.NoteId, tag.Creator, tag.CreateDate)
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +73,8 @@ func (tag Tag) FindByKeyAndValueAndNoteId(key string, value string, noteId int64
 		return nil, errors.New("Please provide key, value, and noteId")
 	}
 
-	sql := fmt.Sprintf("select * from %s where key=? and value=? and note_id=?", TagsTable)
+	sql := fmt.Sprintf("select `id`, `note_id`, `key`, `value`, `creator`, `create_date` from %s where `key`=? and `value`=? and `note_id`=?", TagsTable)
+
 	rows, err := db.Query(sql, key, value, noteId)
 	if err != nil {
 		return nil, err
@@ -81,9 +84,9 @@ func (tag Tag) FindByKeyAndValueAndNoteId(key string, value string, noteId int64
 	var tags []Tag
 	for rows.Next() {
 		t := new(Tag)
-		err := rows.Scan(&t.Id, &t.NoteId, &t.Creator, &t.Key, &t.Value, &t.CreateDate)
+		err := rows.Scan(&t.Id, &t.NoteId, &t.Key, &t.Value, &t.Creator, &t.CreateDate)
 		if err != nil {
-			return nil, errors.New("Problem reading row")
+			return nil, err
 		}
 		tags = append(tags, *t)
 	}

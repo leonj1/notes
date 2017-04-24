@@ -23,7 +23,7 @@ func main() {
 	flag.Parse()
 
 	// open connection to db
-	connectionString := fmt.Sprintf("%s:%s@/%s", *userName, *password, *databaseName)
+	connectionString := fmt.Sprintf("%s:%s@/%s?parseTime=true", *userName, *password, *databaseName)
 	log.Println(fmt.Sprintf("ConnectionString: %s", connectionString))
 	models.InitDB(connectionString)
 

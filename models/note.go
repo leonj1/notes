@@ -15,7 +15,7 @@ type Note struct {
 	ExpirationDate 	time.Time
 }
 
-func (db *DB) AllNotes() ([]*Note, error) {
+func (note Note) AllNotes() ([]*Note, error) {
 	sql := fmt.Sprintf("SELECT * from %s", NotesTable)
 	rows, err := db.Query(sql)
 	if err != nil {

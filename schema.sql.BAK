@@ -10,6 +10,7 @@ create table `notes` (
 
 create table `tags` (
   `id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  `note_id` INT NOT NULL,
   `key` VARCHAR(256) NOT NULL,
   `value` VARCHAR(256) NOT NULL,
   `creator` VARCHAR(128) NOT NULL,
