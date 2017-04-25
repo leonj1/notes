@@ -2,12 +2,13 @@ package main
 
 import (
 	"log"
-	"fmt"
 	"database/sql"
-	"flag"
-	"notes/models"
 	_ "github.com/go-sql-driver/mysql"
 	"net/http"
+	"github.com/husobee/vestigo"
+	"flag"
+	"fmt"
+	"notes/models"
 	"notes/routes"
 )
 
@@ -26,16 +27,23 @@ func main() {
 	connectionString := fmt.Sprintf("%s:%s@/%s?parseTime=true", *userName, *password, *databaseName)
 	models.InitDB(connectionString)
 
-	// intentionally not using a router framework since this is intended to be a microservice
-	http.HandleFunc("/addNote", routes.AddNote)
-	http.HandleFunc("/addTag", routes.AddTags)
+	router := vestigo.NewRouter()
 
-	//http.HandleFunc("/deleteNote", routes.AddNote)
-	//http.HandleFunc("/deleteTag", routes.AddTags)
+	router.Get("/notes", routes.ActiveNotes)
 
-	http.HandleFunc("/getActiveNotes", routes.GetActiveNotes)
-	//http.HandleFunc("/search", routes.Search)
+	router.Post("/tags", routes.AddTags)
+	router.Post("/notes", routes.AddNote)
+
+	router.Delete("/notes/:id", routes.DeleteNote)
+
+	// Catch-All methods to allow easy migration from http.ServeMux
+	router.HandleFunc("/general", GeneralHandler)
 
 	log.Println("Starting web server")
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", *serverPort), nil))
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", *serverPort), router))
+}
+
+func GeneralHandler(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Gotta catch em all!"))
 }

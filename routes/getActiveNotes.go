@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 )
 
-func GetActiveNotes(w http.ResponseWriter, r *http.Request) {
+func ActiveNotes(w http.ResponseWriter, r *http.Request) {
 	var n models.Note
 	notes, err := n.GetActiveNotes()
 	if err != nil {

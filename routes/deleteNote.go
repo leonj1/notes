@@ -4,22 +4,31 @@ import (
 	"net/http"
 	"notes/models"
 	"encoding/json"
+	"github.com/husobee/vestigo"
+	"strconv"
 )
 
 func DeleteNote(w http.ResponseWriter, r *http.Request) {
 	var note models.Note
 
-	if r.Method != "DELETE" {
-		http.Error(w, "Only DELETE HTTP method allowed here", http.StatusForbidden)
+	id := vestigo.Param(r, "id")
+	if id == "" {
+		http.Error(w, "Invalid note_id", http.StatusBadRequest)
 		return
 	}
 
-	err := note.DeleteNodeById()
+	noteId, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		panic(err)
+	}
+
+	err = note.DeleteNodeById(noteId)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
+	// TODO Verify the returned json looks good to the client
 	msg := []byte(`{"status":"deleted"}`)
 
 	js, err := json.Marshal(&msg)
