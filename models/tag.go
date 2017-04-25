@@ -94,6 +94,32 @@ func (tag Tag) FindByKeyAndValueAndNoteId(key string, value string, noteId int64
 	return &tags, nil
 }
 
+func (tag Tag) FindByKeyAndValue(key string, value string) (*[]Tag, error) {
+	if key == "" || value == "" {
+		return nil, errors.New("Please provide key, and value")
+	}
+
+	sql := fmt.Sprintf("select `id`, `note_id`, `key`, `value`, `creator`, `create_date` from %s where `key`=? and `value`=?", TagsTable)
+
+	rows, err := db.Query(sql, key, value)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var tags []Tag
+	for rows.Next() {
+		t := new(Tag)
+		err := rows.Scan(&t.Id, &t.NoteId, &t.Key, &t.Value, &t.Creator, &t.CreateDate)
+		if err != nil {
+			return nil, err
+		}
+		tags = append(tags, *t)
+	}
+
+	return &tags, nil
+}
+
 func (tag Tag) FindByNoteId(noteId int64) (*[]Tag, error) {
 	if noteId == 0 {
 		return nil, errors.New("NoteId needs to be provided")

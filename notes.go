@@ -37,6 +37,9 @@ func main() {
 	// common queries
 	router.Get("/activenotes", routes.ActiveNotes)
 
+	// filters
+	router.Get("/tags/:key/:value", routes.FilterNotesByTag)
+
 	log.Println("Starting web server")
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", *serverPort), router))
 }

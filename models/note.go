@@ -127,3 +127,36 @@ func (note Note) DeleteNodeById(noteId int64) (error) {
 
 	return nil
 }
+
+func (note Note) FindIn(ids *[]int64) ([]*Note, error) {
+	currentTime := time.Now()
+	currentTime.Format(time.RFC3339)
+	sql := fmt.Sprintf("SELECT `id`, `note`, `creator`, `create_date`, `expiration_date` from %s where `id` in (?)", NotesTable)
+	rows, err := db.Query(sql, ids)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	notes := make([]*Note, 0)
+
+	for rows.Next() {
+		note := new(Note)
+		err := rows.Scan(&note.Id, &note.Note, &note.Creator, &note.CreateDate, &note.ExpirationDate)
+		if err != nil {
+			return nil, err
+		}
+		t := new(Tag)
+		note.Tags, err = t.FindByNoteId(note.Id)
+		if err != nil {
+			return nil, err
+		}
+		notes = append(notes, note)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return notes, nil
+}
