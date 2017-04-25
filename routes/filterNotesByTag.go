@@ -5,10 +5,13 @@ import (
 	"net/http"
 	"notes/models"
 	"github.com/husobee/vestigo"
+	"github.com/docker/docker/pkg/plugins/pluginrpc-gen/fixtures"
 )
 
 func FilterNotesByTag(w http.ResponseWriter, r *http.Request) {
 	var t models.Tag
+	var n models.Note
+
 	key := vestigo.Param(r, "key")
 	if key == "" {
 		http.Error(w, "Invalid key", http.StatusBadRequest)
@@ -26,7 +29,16 @@ func FilterNotesByTag(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ids := new([]Tag)
+	ids := make([]int64, 0)
+	for tag := range tags {
+		ids = append(ids, tag.NoteId)
+	}
+
+	notes, err := n.FindIn(&ids)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	js, err := json.Marshal(notes)
 	if err != nil {

@@ -94,7 +94,7 @@ func (tag Tag) FindByKeyAndValueAndNoteId(key string, value string, noteId int64
 	return &tags, nil
 }
 
-func (tag Tag) FindByKeyAndValue(key string, value string) (*[]Tag, error) {
+func (tag Tag) FindByKeyAndValue(key string, value string) ([]Tag, error) {
 	if key == "" || value == "" {
 		return nil, errors.New("Please provide key, and value")
 	}
@@ -117,7 +117,7 @@ func (tag Tag) FindByKeyAndValue(key string, value string) (*[]Tag, error) {
 		tags = append(tags, *t)
 	}
 
-	return &tags, nil
+	return tags, nil
 }
 
 func (tag Tag) FindByNoteId(noteId int64) (*[]Tag, error) {
