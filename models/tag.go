@@ -1,9 +1,9 @@
 package models
 
 import (
-	"time"
 	"fmt"
 	"github.com/kataras/go-errors"
+	"time"
 )
 
 const TagsTable = "tags"

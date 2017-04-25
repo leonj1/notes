@@ -1,9 +1,9 @@
 package routes
 
 import (
+	"encoding/json"
 	"net/http"
 	"notes/models"
-	"encoding/json"
 )
 
 const ContentType = "Content-Type"

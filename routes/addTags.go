@@ -1,10 +1,10 @@
 package routes
 
 import (
-	"net/http"
-	"notes/models"
 	"encoding/json"
 	"github.com/husobee/vestigo"
+	"net/http"
+	"notes/models"
 	"strconv"
 )
 

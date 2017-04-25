@@ -1,9 +1,9 @@
 package routes
 
 import (
+	"encoding/json"
 	"net/http"
 	"notes/models"
-	"encoding/json"
 )
 
 func Search(w http.ResponseWriter, r *http.Request) {
