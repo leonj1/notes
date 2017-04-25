@@ -1,8 +1,8 @@
 package models
 
 import (
+	"errors"
 	"fmt"
-	"github.com/kataras/go-errors"
 	"time"
 )
 

@@ -2,9 +2,9 @@ package routes
 
 import (
 	"encoding/json"
+	"github.com/husobee/vestigo"
 	"net/http"
 	"notes/models"
-	"github.com/husobee/vestigo"
 )
 
 func FilterNotesByTag(w http.ResponseWriter, r *http.Request) {
