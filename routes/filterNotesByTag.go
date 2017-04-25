@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"notes/models"
 	"github.com/husobee/vestigo"
-	"github.com/docker/docker/pkg/plugins/pluginrpc-gen/fixtures"
 )
 
 func FilterNotesByTag(w http.ResponseWriter, r *http.Request) {
@@ -30,7 +29,7 @@ func FilterNotesByTag(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ids := make([]int64, 0)
-	for tag := range tags {
+	for _, tag := range tags {
 		ids = append(ids, tag.NoteId)
 	}
 

@@ -5,7 +5,7 @@ create table `notes` (
   `note` VARCHAR(1024) NOT NULL,
   `creator` VARCHAR(128) NOT NULL,
   `create_date` TIMESTAMP NOT NULL,
-  `expiration_date` TIMESTAMP
+  `expiration_date` TIMESTAMP NULL DEFAULT NULL
 );
 
 create table `tags` (

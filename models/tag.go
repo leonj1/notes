@@ -94,7 +94,7 @@ func (tag Tag) FindByKeyAndValueAndNoteId(key string, value string, noteId int64
 	return &tags, nil
 }
 
-func (tag Tag) FindByKeyAndValue(key string, value string) ([]Tag, error) {
+func (tag Tag) FindByKeyAndValue(key string, value string) ([]*Tag, error) {
 	if key == "" || value == "" {
 		return nil, errors.New("Please provide key, and value")
 	}
@@ -107,14 +107,14 @@ func (tag Tag) FindByKeyAndValue(key string, value string) ([]Tag, error) {
 	}
 	defer rows.Close()
 
-	var tags []Tag
+	tags := []*Tag{}
 	for rows.Next() {
-		t := new(Tag)
+		t := &Tag{}
 		err := rows.Scan(&t.Id, &t.NoteId, &t.Key, &t.Value, &t.Creator, &t.CreateDate)
 		if err != nil {
 			return nil, err
 		}
-		tags = append(tags, *t)
+		tags = append(tags, t)
 	}
 
 	return tags, nil
