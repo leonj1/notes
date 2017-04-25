@@ -36,14 +36,14 @@ func main() {
 
 	router.Delete("/notes/:id", routes.DeleteNote)
 
-	// Catch-All methods to allow easy migration from http.ServeMux
-	router.HandleFunc("/general", GeneralHandler)
+	//// Showing we can still use native HandleFunc
+	//router.HandleFunc("/general", GeneralHandler)
 
 	log.Println("Starting web server")
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", *serverPort), router))
 }
 
-func GeneralHandler(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Gotta catch em all!"))
-}
+//func GeneralHandler(w http.ResponseWriter, r *http.Request) {
+//	w.WriteHeader(http.StatusOK)
+//	w.Write([]byte("Gotta catch em all!"))
+//}
