@@ -19,7 +19,8 @@ func DeleteNote(w http.ResponseWriter, r *http.Request) {
 
 	noteId, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
-		panic(err)
+		http.Error(w, "Invalid note_id", http.StatusBadRequest)
+		return
 	}
 
 	err = note.DeleteNodeById(noteId)
