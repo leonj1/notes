@@ -28,7 +28,11 @@ func main() {
 
 	// intentionally not using a router framework since this is intended to be a microservice
 	http.HandleFunc("/addNote", routes.AddNote)
-	http.HandleFunc("/addTags", routes.AddTags)
+	http.HandleFunc("/addTag", routes.AddTags)
+
+	//http.HandleFunc("/deleteNote", routes.AddNote)
+	//http.HandleFunc("/deleteTag", routes.AddTags)
+
 	http.HandleFunc("/getActiveNotes", routes.GetActiveNotes)
 	//http.HandleFunc("/search", routes.Search)
 

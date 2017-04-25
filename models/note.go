@@ -3,6 +3,7 @@ package models
 import (
 	"time"
 	"fmt"
+	"github.com/kataras/go-errors"
 )
 
 const NotesTable = "notes"
@@ -98,4 +99,24 @@ func (note Note) GetActiveNotes() ([]*Note, error) {
 	}
 
 	return notes, nil
+}
+
+func (note Note) DeleteNodeById(noteId int64) (error) {
+	if noteId == 0 {
+		return errors.New("NoteId is required")
+	}
+
+	sql := fmt.Sprintf("DELETE FROM %s where note_id=?", TagsTable)
+	_, err := db.Exec(sql, noteId)
+	if err != nil {
+		return err
+	}
+
+	sql = fmt.Sprintf("DELETE FROM %s where `id`=?", NotesTable)
+	_, err = db.Exec(sql, noteId)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
