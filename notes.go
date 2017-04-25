@@ -1,13 +1,13 @@
 package main
 
 import (
-	"log"
 	"database/sql"
-	_ "github.com/go-sql-driver/mysql"
-	"net/http"
-	"github.com/husobee/vestigo"
 	"flag"
 	"fmt"
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/husobee/vestigo"
+	"log"
+	"net/http"
 	"notes/models"
 	"notes/routes"
 )
