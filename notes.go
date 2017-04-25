@@ -29,10 +29,13 @@ func main() {
 
 	router := vestigo.NewRouter()
 
-	router.Get("/notes", routes.ActiveNotes)
+	router.Get("/notes", routes.AllNotes)
 	router.Post("/notes", routes.AddNote)
 	router.Put("/notes/:id", routes.AddTags)
 	router.Delete("/notes/:id", routes.DeleteNote)
+
+	// common queries
+	router.Get("/activenotes", routes.ActiveNotes)
 
 	log.Println("Starting web server")
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", *serverPort), router))

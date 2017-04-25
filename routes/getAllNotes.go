@@ -6,9 +6,9 @@ import (
 	"notes/models"
 )
 
-func ActiveNotes(w http.ResponseWriter, r *http.Request) {
+func AllNotes(w http.ResponseWriter, r *http.Request) {
 	var n models.Note
-	notes, err := n.ActiveNotes()
+	notes, err := n.AllNotes()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

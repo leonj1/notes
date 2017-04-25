@@ -18,8 +18,10 @@ type Note struct {
 }
 
 func (note Note) AllNotes() ([]*Note, error) {
-	sql := fmt.Sprintf("SELECT * from %s", NotesTable)
-	rows, err := db.Query(sql)
+	currentTime := time.Now()
+	currentTime.Format(time.RFC3339)
+	sql := fmt.Sprintf("SELECT `id`, `note`, `creator`, `create_date`, `expiration_date` from %s", NotesTable)
+	rows, err := db.Query(sql, currentTime)
 	if err != nil {
 		return nil, err
 	}
@@ -29,7 +31,12 @@ func (note Note) AllNotes() ([]*Note, error) {
 
 	for rows.Next() {
 		note := new(Note)
-		err := rows.Scan(&note.Id, &note.Note)
+		err := rows.Scan(&note.Id, &note.Note, &note.Creator, &note.CreateDate, &note.ExpirationDate)
+		if err != nil {
+			return nil, err
+		}
+		t := new(Tag)
+		note.Tags, err = t.FindByNoteId(note.Id)
 		if err != nil {
 			return nil, err
 		}
@@ -68,7 +75,7 @@ func (note Note) Save() (*Note, error){
 	return &note, nil
 }
 
-func (note Note) GetActiveNotes() ([]*Note, error) {
+func (note Note) ActiveNotes() ([]*Note, error) {
 	currentTime := time.Now()
 	currentTime.Format(time.RFC3339)
 	sql := fmt.Sprintf("SELECT `id`, `note`, `creator`, `create_date`, `expiration_date` from %s where `expiration_date` = '0000-00-00 00:00:00' or expiration_date > ?", NotesTable)
