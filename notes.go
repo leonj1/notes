@@ -34,14 +34,6 @@ func main() {
 	router.Put("/notes/:id", routes.AddTags)
 	router.Delete("/notes/:id", routes.DeleteNote)
 
-	//// Showing we can still use native HandleFunc
-	//router.HandleFunc("/general", GeneralHandler)
-
 	log.Println("Starting web server")
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", *serverPort), router))
 }
-
-//func GeneralHandler(w http.ResponseWriter, r *http.Request) {
-//	w.WriteHeader(http.StatusOK)
-//	w.Write([]byte("Gotta catch em all!"))
-//}
