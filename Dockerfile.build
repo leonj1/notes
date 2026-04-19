@@ -1,0 +1,17 @@
+FROM golang:1.21-alpine AS builder
+
+RUN apk add --no-cache git
+
+ENV CGO_ENABLED=0
+
+WORKDIR /app
+
+COPY . .
+
+RUN go mod init notes && \
+    go mod tidy && \
+    go build -o /notes .
+
+FROM scratch
+COPY --from=builder /notes /notes
+ENTRYPOINT ["/notes"]
