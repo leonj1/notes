@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"github.com/husobee/vestigo"
 	"net/http"
-	"notes/clients"
+	"notes/services"
 	"strconv"
 )
 
@@ -21,7 +21,7 @@ func DeleteNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := clients.DeleteNote(noteId); err != nil {
+	if err := services.Notes.Delete(noteId); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

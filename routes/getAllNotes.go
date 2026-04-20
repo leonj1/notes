@@ -3,11 +3,11 @@ package routes
 import (
 	"encoding/json"
 	"net/http"
-	"notes/clients"
+	"notes/services"
 )
 
 func AllNotes(w http.ResponseWriter, r *http.Request) {
-	notes, err := clients.AllNotes()
+	notes, err := services.Notes.All()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

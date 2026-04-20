@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"github.com/husobee/vestigo"
 	"net/http"
-	"notes/clients"
+	"notes/services"
 )
 
 func FilterNotesByTag(w http.ResponseWriter, r *http.Request) {
@@ -19,7 +19,7 @@ func FilterNotesByTag(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	notes, err := clients.FilterNotesByTag(key, value)
+	notes, err := services.Notes.FilterByTag(key, value)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

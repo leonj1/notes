@@ -5,8 +5,8 @@ import (
 	"errors"
 	"github.com/husobee/vestigo"
 	"net/http"
-	"notes/clients"
 	"notes/models"
+	"notes/services"
 	"strconv"
 )
 
@@ -36,9 +36,9 @@ func AddTags(w http.ResponseWriter, r *http.Request) {
 
 	tag.NoteId = noteId
 
-	saved, err := clients.AddTag(tag)
+	saved, err := services.Notes.AddTag(tag)
 	if err != nil {
-		if errors.Is(err, clients.ErrTagAlreadyExists) {
+		if errors.Is(err, services.ErrTagAlreadyExists) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}

@@ -3,8 +3,8 @@ package routes
 import (
 	"encoding/json"
 	"net/http"
-	"notes/clients"
 	"notes/models"
+	"notes/services"
 )
 
 const ContentType = "Content-Type"
@@ -21,7 +21,7 @@ func AddNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	saved, err := clients.AddNote(note)
+	saved, err := services.Notes.Add(note)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
