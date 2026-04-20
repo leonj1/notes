@@ -1,62 +1,26 @@
 package clients
 
 import (
-	"encoding/json"
-	"github.com/husobee/vestigo"
-	"net/http"
+	"errors"
 	"notes/models"
-	"strconv"
 )
 
-func AddTags(w http.ResponseWriter, r *http.Request) {
-	var tag models.Tag
-	id := vestigo.Param(r, "id")
-	if id == "" {
-		http.Error(w, "Invalid note_id", http.StatusBadRequest)
-		return
-	}
+// ErrTagAlreadyExists is returned by AddTag when a tag with the same
+// key/value already exists for the supplied note id.
+var ErrTagAlreadyExists = errors.New("tag already exists for this node")
 
-	noteId, err := strconv.ParseInt(id, 10, 64)
+// AddTag persists a new tag for a note after verifying that an identical
+// tag (same Key, Value, and NoteId) does not already exist. The supplied
+// tag must have Key, Value, and NoteId populated.
+func AddTag(tag models.Tag) (*models.Tag, error) {
+	existing, err := tag.FindByKeyAndValueAndNoteId(tag.Key, tag.Value, tag.NoteId)
 	if err != nil {
-		http.Error(w, "Invalid note_id", http.StatusBadRequest)
-		return
+		return nil, err
 	}
 
-	if r.Body == nil {
-		http.Error(w, "Please send a request body", http.StatusBadRequest)
-		return
-	}
-	err = json.NewDecoder(r.Body).Decode(&tag)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+	if existing != nil && len(*existing) > 0 {
+		return nil, ErrTagAlreadyExists
 	}
 
-	tag.NoteId = noteId
-
-	tags, err := tag.FindByKeyAndValueAndNoteId(tag.Key, tag.Value, tag.NoteId)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	if len(*tags) > 0 {
-		http.Error(w, "Tag already exists for this node", http.StatusBadRequest)
-		return
-	}
-
-	saved, err := tag.Save()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	js, err := json.Marshal(&saved)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set(ContentType, JSON)
-	w.Write(js)
+	return tag.Save()
 }
