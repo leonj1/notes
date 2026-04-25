@@ -11,17 +11,6 @@ import (
 func newRouter() *vestigo.Router {
 	router := vestigo.NewRouter()
 
-	router.Get("/notes", routes.AllNotes)
-	router.Post("/notes", routes.AddNote)
-	router.Put("/notes/:id", routes.AddTags)
-	router.Delete("/notes/:id", routes.DeleteNote)
-
-	// common queries
-	router.Get("/activenotes", routes.ActiveNotes)
-
-	// filters
-	router.Get("/tags/:key/:value", routes.FilterNotesByTag)
-
 	// schedules
 	router.Post("/schedules", routes.CreateSchedule)
 	router.Get("/schedules", routes.ListSchedules)

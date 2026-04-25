@@ -10,6 +10,10 @@ import (
 	"time"
 )
 
+// Common HTTP header constants used by all JSON-emitting handlers in this package.
+const ContentType = "Content-Type"
+const JSON = "application/json"
+
 // Package-level function variables that delegate to the clients package.
 // Tests can replace these to avoid hitting the database.
 var (
