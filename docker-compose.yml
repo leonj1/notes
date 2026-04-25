@@ -55,5 +55,14 @@ services:
       flyway:
         condition: service_completed_successfully
 
+  ui:
+    build:
+      context: .
+      dockerfile: Dockerfile.ui
+    ports:
+      - "${UI_PORT:-8081}:80"
+    depends_on:
+      - notes
+
 volumes:
   mysql-data:
