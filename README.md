@@ -27,26 +27,42 @@ GET  /tags/{key}/{value} -> filter notes by tag
 
 ## Quick start (3 minutes)
 
-You need only Docker and a MySQL instance reachable from your host.
+You only need Docker. The bundled `docker-compose.yml` brings up MySQL,
+applies all `./migrations` via Flyway, and starts the notes server.
 
 ```sh
 # 1. Run the tests (no DB required — pure unit tests in a container)
 make test
 
-# 2. Build the server image
-docker build -f Dockerfile.build -t notes .
+# 2. Bring up the full stack (MySQL + Flyway migrations + notes server)
+make start
 
-# 3. Apply the schedule schema migration to your MySQL DB
-mysql -u <user> -p <db> < migrations/001_add_recurrence_and_snooze.sql
+# 3. Verify it's up
+curl http://localhost:8080/activenotes
 
-# 4. Run the server (point it at your MySQL)
-docker run --rm -p 8080:8080 notes \
-    -user=<user> -pass=<pass> -db=<db> -port=8080
+# 4. Tear it down when done
+make stop
 ```
 
-The service exits if the DB is unreachable, so verify your MySQL
-credentials first. The `notes`, `tags`, and `schedule` tables must
-exist; `migrations/` contains incremental DDL for the schedule pieces.
+`make start` uses `docker compose up --build`, so it builds the notes
+image from `Dockerfile.build` and orchestrates startup order:
+`mysql` (healthy) → `flyway migrate` (success) → `notes`.
+
+To run the server against a MySQL instance you manage yourself:
+
+```sh
+docker build -f Dockerfile.build -t notes .
+docker run --rm -p 8080:8080 notes \
+    -host=<host:port> -user=<user> -pass=<pass> -db=<db> -port=8080
+```
+
+Apply the same migrations to that database with Flyway, e.g.:
+
+```sh
+docker run --rm -v "$PWD/migrations:/flyway/sql:ro" flyway/flyway:10 \
+    -url=jdbc:mysql://<host>:3306/<db> \
+    -user=<user> -password=<pass> migrate
+```
 
 ## Examples
 
