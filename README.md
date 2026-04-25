@@ -11,6 +11,7 @@ GET  /activenotes        -> list non-expired notes
 PUT  /notes/{id}         -> attach a tag to a note
 DELETE /notes/{id}       -> delete a note (and its tags)
 GET  /tags/{key}/{value} -> filter notes by tag
+GET  /ui/                -> static audit events dashboard
 ```
 
 ## What you get
@@ -138,6 +139,13 @@ services.Scheduler.InvokeDueAt(all, time.Now(), func(s *models.Schedule) {
 // Snooze the weekend reminder until tomorrow morning.
 services.Scheduler.Snooze(weekend.Id, time.Now().Add(24*time.Hour))
 ```
+
+### Audit dashboard
+
+Once the server is running, open `http://localhost:8080/ui/` for a static
+dashboard that shows recent audit events with schedule, count, and date
+range filters. The page is plain HTML/CSS/JS and talks directly to the
+existing audit endpoints.
 
 ### Schedule field cheat sheet
 

@@ -13,5 +13,7 @@ RUN test -f go.mod || go mod init notes && \
     go build -o /notes .
 
 FROM alpine
-COPY --from=builder /notes /notes
-ENTRYPOINT ["/notes"]
+WORKDIR /app
+COPY --from=builder /notes /app/notes
+COPY ui /app/ui
+ENTRYPOINT ["/app/notes"]

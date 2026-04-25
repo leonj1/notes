@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Audit Events</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <p class="eyebrow">Notes API</p>
+      <div class="hero-row">
+        <div>
+          <h1>Audit events</h1>
+          <p class="intro">
+            Recent scheduled job runs from the notes service, filtered by job,
+            date range, and result count.
+          </p>
+        </div>
+        <div class="hero-stats" aria-label="Audit summary">
+          <div class="stat">
+            <span id="stat-count">0</span>
+            <label>visible events</label>
+          </div>
+          <div class="stat">
+            <span id="stat-latest">-</span>
+            <label>latest run</label>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel controls">
+      <form id="filters" class="filter-grid">
+        <label class="field">
+          <span>Most recent N</span>
+          <input id="limit" name="limit" type="number" min="1" max="200" value="25" inputmode="numeric">
+        </label>
+
+        <label class="field field-wide">
+          <span>Search job name</span>
+          <input
+            id="job-search"
+            name="jobSearch"
+            type="search"
+            placeholder="Search by filename or script path"
+            autocomplete="off"
+          >
+        </label>
+
+        <label class="field field-wide">
+          <span>Specific scheduled job</span>
+          <select id="schedule-select" name="scheduleId">
+            <option value="">All jobs</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Start date</span>
+          <input id="start-date" name="startDate" type="date">
+        </label>
+
+        <label class="field">
+          <span>End date</span>
+          <input id="end-date" name="endDate" type="date">
+        </label>
+
+        <div class="actions">
+          <button class="button button-primary" type="submit">Apply</button>
+          <button class="button" id="reset-button" type="button">Reset</button>
+        </div>
+      </form>
+
+      <p id="status" class="status" role="status" aria-live="polite"></p>
+      <p id="summary" class="summary">Loading audit events...</p>
+    </section>
+
+    <section id="events" class="events" aria-live="polite"></section>
+  </main>
+
+  <template id="event-template">
+    <article class="event-card">
+      <div class="event-header">
+        <div>
+          <p class="event-job"></p>
+          <p class="event-script"></p>
+        </div>
+        <span class="event-status"></span>
+      </div>
+
+      <dl class="event-meta">
+        <div>
+          <dt>Schedule</dt>
+          <dd class="event-schedule"></dd>
+        </div>
+        <div>
+          <dt>Started</dt>
+          <dd class="event-start"></dd>
+        </div>
+        <div>
+          <dt>Duration</dt>
+          <dd class="event-duration"></dd>
+        </div>
+      </dl>
+
+      <p class="event-preview"></p>
+
+      <details class="event-details">
+        <summary>Execution details</summary>
+
+        <section class="detail-block detail-error-block">
+          <h2>Error</h2>
+          <pre class="event-error"></pre>
+        </section>
+
+        <section class="detail-block detail-output-block">
+          <h2>Output</h2>
+          <pre class="event-output"></pre>
+        </section>
+      </details>
+    </article>
+  </template>
+
+  <noscript>
+    <div class="noscript">Enable JavaScript to load audit events.</div>
+  </noscript>
+
+  <script src="app.js" defer></script>
+</body>
+</html>
