@@ -1,4 +1,4 @@
-FROM golang:1.21-alpine
+FROM golang:1.22-alpine
 
 RUN apk add --no-cache git
 
@@ -8,7 +8,7 @@ WORKDIR /app
 
 COPY . .
 
-RUN go mod init notes && \
+RUN test -f go.mod || go mod init notes && \
     go mod tidy
 
 CMD ["go", "test", "-v", "./..."]

@@ -1,4 +1,4 @@
-FROM golang:1.21-alpine AS builder
+FROM golang:1.22-alpine AS builder
 
 RUN apk add --no-cache git
 
@@ -8,10 +8,10 @@ WORKDIR /app
 
 COPY . .
 
-RUN go mod init notes && \
+RUN test -f go.mod || go mod init notes && \
     go mod tidy && \
     go build -o /notes .
 
-FROM scratch
+FROM alpine
 COPY --from=builder /notes /notes
 ENTRYPOINT ["/notes"]

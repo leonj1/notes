@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"notes/models"
 	"notes/routes"
+	"notes/services"
 )
 
 type Env struct {
@@ -40,6 +41,20 @@ func main() {
 
 	// filters
 	router.Get("/tags/:key/:value", routes.FilterNotesByTag)
+
+	// schedules
+	router.Post("/schedules", routes.CreateSchedule)
+	router.Get("/schedules", routes.ListSchedules)
+	router.Get("/schedules/:id", routes.GetSchedule)
+	router.Delete("/schedules/:id", routes.DeleteSchedule)
+
+	// audits
+	router.Get("/schedules/:id/audits", routes.ListAuditsBySchedule)
+	router.Get("/audits/recent/:n", routes.ListRecentAudits)
+	router.Get("/audits", routes.ListAuditsByDateRange)
+
+	// start background scheduler worker
+	services.StartWorker()
 
 	log.Println("Starting web server")
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", *serverPort), router))
