@@ -29,6 +29,28 @@ func (s *SchedulerService) Delete(id int64) error {
 	return clients.DeleteSchedule(id)
 }
 
+// Snooze suppresses the schedule with the given id until the provided time.
+// The change is persisted via the client layer. The updated schedule is
+// returned for convenience.
+func (s *SchedulerService) Snooze(id int64, until time.Time) (*models.Schedule, error) {
+	sched, err := clients.GetSchedule(id)
+	if err != nil {
+		return nil, err
+	}
+	sched.SnoozedUntil = &until
+	return clients.UpdateSchedule(*sched)
+}
+
+// ClearSnooze removes any active snooze on the schedule with the given id.
+func (s *SchedulerService) ClearSnooze(id int64) (*models.Schedule, error) {
+	sched, err := clients.GetSchedule(id)
+	if err != nil {
+		return nil, err
+	}
+	sched.SnoozedUntil = nil
+	return clients.UpdateSchedule(*sched)
+}
+
 func (s *SchedulerService) ListEnabled() ([]*models.Schedule, error) {
 	all, err := clients.ListSchedules()
 	if err != nil {
@@ -46,17 +68,23 @@ func (s *SchedulerService) ListEnabled() ([]*models.Schedule, error) {
 
 var Scheduler = NewSchedulerService()
 
-// IsDueAt reports whether sched should run at t based on its AllowedDays
-// and AllowedTimes fields.
+// IsDueAt reports whether sched should run at t based on its AllowedDays,
+// AllowedTimes, IntervalWeeks/AnchorDate, and SnoozedUntil fields.
 //
 //   - AllowedDays: comma-separated three-letter weekday names ("Mon,Wed,Fri").
 //     Empty matches any day.
 //   - AllowedTimes: comma-separated HH:MM times ("09:00,17:30").
 //     Empty matches any time.
+//   - IntervalWeeks (with AnchorDate): controls recurrence cadence. 0 or 1 means
+//     "every week"; N>1 means "every Nth week relative to AnchorDate", and a
+//     time before the anchor never matches.
 //
 // Matching is case-insensitive and tolerant of surrounding whitespace.
 func IsDueAt(sched *models.Schedule, t time.Time) bool {
 	if sched == nil {
+		return false
+	}
+	if snoozeSuppresses(sched, t) {
 		return false
 	}
 	if !dayMatches(sched.AllowedDays, t) {
@@ -65,7 +93,40 @@ func IsDueAt(sched *models.Schedule, t time.Time) bool {
 	if !timeMatches(sched.AllowedTimes, t) {
 		return false
 	}
+	if !intervalMatches(sched, t) {
+		return false
+	}
 	return true
+}
+
+// snoozeSuppresses reports whether sched is currently snoozed past t.
+func snoozeSuppresses(sched *models.Schedule, t time.Time) bool {
+	return sched.SnoozedUntil != nil && t.Before(*sched.SnoozedUntil)
+}
+
+func intervalMatches(sched *models.Schedule, t time.Time) bool {
+	interval := sched.IntervalWeeks
+	if interval <= 1 {
+		return true
+	}
+	if sched.AnchorDate.IsZero() {
+		// Cadence requested but no anchor — treat as every week to avoid
+		// silently dropping firings.
+		return true
+	}
+	days := daysBetween(sched.AnchorDate, t)
+	if days < 0 {
+		return false
+	}
+	return (days/7)%interval == 0
+}
+
+// daysBetween returns the number of whole calendar days from a to b, comparing
+// only the date components in UTC. Negative if b is before a.
+func daysBetween(a, b time.Time) int {
+	aDay := time.Date(a.Year(), a.Month(), a.Day(), 0, 0, 0, 0, time.UTC)
+	bDay := time.Date(b.Year(), b.Month(), b.Day(), 0, 0, 0, 0, time.UTC)
+	return int(bDay.Sub(aDay) / (24 * time.Hour))
 }
 
 func dayMatches(allowedDays string, t time.Time) bool {
