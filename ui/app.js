@@ -476,8 +476,9 @@ function formatDuration(start, end) {
     return `${(ms / 1000).toFixed(ms < 10000 ? 1 : 0)}s`
   }
 
-  const minutes = Math.floor(ms / 60000)
-  const seconds = Math.round((ms % 60000) / 1000)
+  const totalSeconds = Math.round(ms / 1000)
+  const minutes = Math.floor(totalSeconds / 60)
+  const seconds = totalSeconds % 60
   if (seconds === 0) {
     return `${minutes}m`
   }

@@ -343,7 +343,7 @@ pre {
   border-radius: 16px;
   background: rgba(22, 35, 43, 0.05);
   border: 1px solid rgba(22, 35, 43, 0.08);
-  font-family: "SFMono-Regular", "Menlo", "Consolas", monospace;
+  font-family: SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 0.9rem;
   line-height: 1.55;
 }
@@ -392,7 +392,7 @@ pre {
 }
 
 @keyframes pulse {
-  from {
+  0% {
     transform: scaleX(0.35);
     opacity: 0.45;
   }
@@ -400,7 +400,7 @@ pre {
     transform: scaleX(1);
     opacity: 1;
   }
-  to {
+  100% {
     transform: scaleX(0.35);
     opacity: 0.45;
   }
