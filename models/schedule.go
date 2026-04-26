@@ -22,6 +22,7 @@ type Schedule struct {
 	SilenceDays   string     `json:"silence_days,omitempty"`
 	SilenceTimes  string     `json:"silence_times,omitempty"`
 	ScriptPath    string     `json:"script_path,omitempty"`
+	Description   string     `json:"description,omitempty"`
 	Status        string     `json:"status,omitempty"`
 	CreateDate    time.Time  `json:"create_date,omitempty"`
 	// IntervalWeeks controls recurrence cadence. 0 or 1 means "every week";
@@ -40,7 +41,7 @@ func validStatus(status string) bool {
 }
 
 func (s Schedule) All() ([]*Schedule, error) {
-	query := fmt.Sprintf("SELECT `id`, `cron_schedule`, `allowed_days`, `allowed_times`, `silence_days`, `silence_times`, `script_path`, `status`, `create_date`, `interval_weeks`, `anchor_date`, `snoozed_until` FROM %s", SchedulesTable)
+	query := fmt.Sprintf("SELECT `id`, `cron_schedule`, `allowed_days`, `allowed_times`, `silence_days`, `silence_times`, `script_path`, `description`, `status`, `create_date`, `interval_weeks`, `anchor_date`, `snoozed_until` FROM %s", SchedulesTable)
 	rows, err := db.Query(query)
 	if err != nil {
 		return nil, err
@@ -60,6 +61,7 @@ func (s Schedule) All() ([]*Schedule, error) {
 			&sched.SilenceDays,
 			&sched.SilenceTimes,
 			&sched.ScriptPath,
+			&sched.Description,
 			&sched.Status,
 			&sched.CreateDate,
 			&sched.IntervalWeeks,
@@ -91,7 +93,7 @@ func (s Schedule) FindById(id int64) (*Schedule, error) {
 		return nil, errors.New("Please provide a valid id")
 	}
 
-	query := fmt.Sprintf("SELECT `id`, `cron_schedule`, `allowed_days`, `allowed_times`, `silence_days`, `silence_times`, `script_path`, `status`, `create_date`, `interval_weeks`, `anchor_date`, `snoozed_until` FROM %s WHERE `id`=?", SchedulesTable)
+	query := fmt.Sprintf("SELECT `id`, `cron_schedule`, `allowed_days`, `allowed_times`, `silence_days`, `silence_times`, `script_path`, `description`, `status`, `create_date`, `interval_weeks`, `anchor_date`, `snoozed_until` FROM %s WHERE `id`=?", SchedulesTable)
 	row := db.QueryRow(query, id)
 
 	sched := new(Schedule)
@@ -105,6 +107,7 @@ func (s Schedule) FindById(id int64) (*Schedule, error) {
 		&sched.SilenceDays,
 		&sched.SilenceTimes,
 		&sched.ScriptPath,
+		&sched.Description,
 		&sched.Status,
 		&sched.CreateDate,
 		&sched.IntervalWeeks,
@@ -139,7 +142,7 @@ func (s Schedule) Save() (*Schedule, error) {
 	if s.Id == 0 {
 		s.CreateDate = time.Now()
 		s.CreateDate.Format(time.RFC3339)
-		query = fmt.Sprintf("INSERT INTO %s (`cron_schedule`, `allowed_days`, `allowed_times`, `silence_days`, `silence_times`, `script_path`, `status`, `create_date`, `interval_weeks`, `anchor_date`, `snoozed_until`) VALUES (?,?,?,?,?,?,?,?,?,?,?)", SchedulesTable)
+		query = fmt.Sprintf("INSERT INTO %s (`cron_schedule`, `allowed_days`, `allowed_times`, `silence_days`, `silence_times`, `script_path`, `description`, `status`, `create_date`, `interval_weeks`, `anchor_date`, `snoozed_until`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)", SchedulesTable)
 		res, err := db.Exec(query,
 			s.CronSchedule,
 			s.AllowedDays,
@@ -147,6 +150,7 @@ func (s Schedule) Save() (*Schedule, error) {
 			s.SilenceDays,
 			s.SilenceTimes,
 			s.ScriptPath,
+			s.Description,
 			s.Status,
 			s.CreateDate,
 			s.IntervalWeeks,
@@ -163,7 +167,7 @@ func (s Schedule) Save() (*Schedule, error) {
 		return &s, nil
 	}
 
-	query = fmt.Sprintf("UPDATE %s SET `cron_schedule`=?, `allowed_days`=?, `allowed_times`=?, `silence_days`=?, `silence_times`=?, `script_path`=?, `status`=?, `interval_weeks`=?, `anchor_date`=?, `snoozed_until`=? WHERE `id`=?", SchedulesTable)
+	query = fmt.Sprintf("UPDATE %s SET `cron_schedule`=?, `allowed_days`=?, `allowed_times`=?, `silence_days`=?, `silence_times`=?, `script_path`=?, `description`=?, `status`=?, `interval_weeks`=?, `anchor_date`=?, `snoozed_until`=? WHERE `id`=?", SchedulesTable)
 	_, err := db.Exec(query,
 		s.CronSchedule,
 		s.AllowedDays,
@@ -171,6 +175,7 @@ func (s Schedule) Save() (*Schedule, error) {
 		s.SilenceDays,
 		s.SilenceTimes,
 		s.ScriptPath,
+		s.Description,
 		s.Status,
 		s.IntervalWeeks,
 		nullableTime(s.AnchorDate),
