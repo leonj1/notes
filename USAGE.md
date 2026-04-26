@@ -19,13 +19,13 @@ The same paths work on either base URL.
 - **Content type**: requests with bodies must send `Content-Type: application/json`.
 - **Timestamps**: query parameters use RFC 3339 (e.g. `2024-01-31T23:59:59Z`). Response timestamps follow Go's default `time.Time` JSON encoding (RFC 3339 with nanoseconds).
 - **Errors**: failures return a non-2xx status with a plain-text body (e.g. `Invalid schedule id`). The UI proxy can additionally return HTML 404s from nginx for paths that are neither static files nor proxied.
-- **JSON casing**: `Schedule` and `Audit` use `snake_case` (see `models/schedule.go:17-36`, `models/audit.go:16-25`).
+- **JSON casing**: `Schedule` and `Audit` use `snake_case` (see `models/schedule.go:17-37`, `models/audit.go:16-25`).
 
 ---
 
 ## Schedules
 
-A `Schedule` describes a cron-driven script execution. Defined in `models/schedule.go:17-36`.
+A `Schedule` describes a cron-driven script execution. Defined in `models/schedule.go:17-37`.
 
 ### Schedule object
 
@@ -34,6 +34,7 @@ A `Schedule` describes a cron-driven script execution. Defined in `models/schedu
 | `id` | string-encoded int | Server-assigned. |
 | `cron_schedule` | string | Required on create. |
 | `script_path` | string | Required on create. |
+| `description` | string | Optional human-readable summary of the schedule's purpose. |
 | `status` | `"enabled"` \| `"disabled"` | Defaults to `"disabled"` if omitted. |
 | `allowed_days`, `allowed_times`, `silence_days`, `silence_times` | string | Free-form windows. |
 | `interval_weeks` | int | `0` or `1` = every week; `N` = every Nth week relative to `anchor_date`. |
@@ -49,6 +50,7 @@ curl -s -X POST http://localhost:8080/schedules \
   -d '{
     "cron_schedule": "*/5 * * * *",
     "script_path": "/scripts/health.sh",
+    "description": "Run the workday health check every 5 minutes",
     "status": "enabled",
     "allowed_days": "mon-fri",
     "allowed_times": "09:00-17:00"
@@ -62,6 +64,7 @@ Response (201):
   "id": "1",
   "cron_schedule": "*/5 * * * *",
   "script_path": "/scripts/health.sh",
+  "description": "Run the workday health check every 5 minutes",
   "status": "enabled",
   "allowed_days": "mon-fri",
   "allowed_times": "09:00-17:00",
