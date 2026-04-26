@@ -1,9 +1,14 @@
 name: SDK Release
 
-# Releases the Go SDK submodule. Triggered when a tag of the form
-# `sdk/vX.Y.Z` is pushed -- this is the canonical tag format Go's module
-# system recognises for a submodule rooted at sdk/. Once the tag is pushed
-# and validated, consumers can run:
+# Validates a tagged SDK version, attaches a source tarball, and publishes a
+# GitHub Release. Two ways to trigger:
+#
+# 1. Push a tag of the form `sdk/vX.Y.Z` directly (the canonical Go submodule
+#    tag format). Useful for hand-crafted releases.
+# 2. As a reusable workflow invoked by `sdk-bump.yml`, which automates the
+#    bump-and-tag flow.
+#
+# Either way, after this workflow succeeds consumers can run:
 #
 #     go get github.com/leonj1/notes/sdk@vX.Y.Z
 
@@ -11,23 +16,44 @@ on:
   push:
     tags:
       - 'sdk/v*'
+  workflow_call:
+    inputs:
+      tag:
+        description: 'Full tag name to release, e.g. sdk/v0.1.0.'
+        type: string
+        required: true
 
 permissions:
   contents: write
+
+concurrency:
+  group: sdk-release-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
 
 jobs:
   release:
     name: validate + publish
     runs-on: ubuntu-latest
     steps:
+      - name: Resolve tag
+        id: tag
+        run: |
+          set -euo pipefail
+          tag="${{ inputs.tag || github.ref_name }}"
+          version="${tag#sdk/}"
+          echo "tag=${tag}"         >> "$GITHUB_OUTPUT"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+
       - uses: actions/checkout@v4
         with:
+          ref: ${{ steps.tag.outputs.tag }}
           fetch-depth: 0
 
       - uses: actions/setup-go@v5
         with:
           go-version: '1.22'
-          cache-dependency-path: sdk/go.sum
+          # SDK is stdlib-only so go.sum may not exist; key on go.mod instead.
+          cache-dependency-path: sdk/go.mod
 
       - name: Run SDK tests
         working-directory: sdk
@@ -38,23 +64,55 @@ jobs:
       - name: Verify git tag matches sdk.Version constant
         run: |
           set -euo pipefail
-          tag_version="${GITHUB_REF_NAME#sdk/}"
           declared=$(grep -oE 'Version = "v[^"]+"' sdk/version.go | head -n1 | sed -E 's/.*"([^"]+)"/\1/')
           if [ -z "$declared" ]; then
             echo "could not parse Version from sdk/version.go"; exit 1
           fi
-          if [ "$tag_version" != "$declared" ]; then
-            echo "tag $tag_version does not match sdk.Version $declared"; exit 1
+          if [ "${{ steps.tag.outputs.version }}" != "$declared" ]; then
+            echo "tag ${{ steps.tag.outputs.version }} does not match sdk.Version $declared"
+            exit 1
           fi
-          echo "verified: $tag_version == $declared"
+          echo "verified: ${{ steps.tag.outputs.version }} == $declared"
 
-      - name: Create GitHub Release
+      - name: Build SDK source tarball
+        id: archive
+        run: |
+          set -euo pipefail
+          version="${{ steps.tag.outputs.version }}"
+          archive="notes-go-sdk-${version}.tar.gz"
+          # Archive only the sdk/ subtree at the tagged commit so consumers
+          # can download a focused bundle without the rest of the repo.
+          git archive \
+            --format=tar.gz \
+            --prefix="notes-go-sdk-${version}/" \
+            --output="${archive}" \
+            "${{ steps.tag.outputs.tag }}" -- sdk
+          echo "path=${archive}" >> "$GITHUB_OUTPUT"
+          ls -lh "${archive}"
+
+      - name: Create or update GitHub Release with source tarball
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          tag="${GITHUB_REF_NAME}"
-          version="${tag#sdk/}"
-          gh release create "$tag" \
-            --title "SDK ${version}" \
-            --notes "Go SDK release ${version}. Install with: \`go get github.com/leonj1/notes/sdk@${version}\`" \
-            --generate-notes
+          set -euo pipefail
+          tag="${{ steps.tag.outputs.tag }}"
+          version="${{ steps.tag.outputs.version }}"
+          archive="${{ steps.archive.outputs.path }}"
+
+          notes="Go SDK release ${version}.
+
+          Install:
+
+          \`\`\`
+          go get github.com/leonj1/notes/sdk@${version}
+          \`\`\`"
+
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "release $tag already exists; uploading archive only"
+            gh release upload "$tag" "$archive" --clobber
+          else
+            gh release create "$tag" "$archive" \
+              --title "SDK ${version}" \
+              --notes "$notes" \
+              --generate-notes
+          fi
