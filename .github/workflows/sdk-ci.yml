@@ -1,0 +1,44 @@
+name: SDK CI
+
+# Validates the Go SDK submodule on every push and pull request that touches
+# either the SDK source or this workflow itself. Runs from inside the sdk/
+# directory because the SDK has its own go.mod.
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'sdk/**'
+      - '.github/workflows/sdk-ci.yml'
+  pull_request:
+    paths:
+      - 'sdk/**'
+      - '.github/workflows/sdk-ci.yml'
+
+jobs:
+  test:
+    name: vet + test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: sdk
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache-dependency-path: sdk/go.sum
+
+      - name: go vet
+        run: go vet ./...
+
+      - name: go test
+        run: go test ./... -race -coverprofile=coverage.out -covermode=atomic
+
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sdk-coverage
+          path: sdk/coverage.out

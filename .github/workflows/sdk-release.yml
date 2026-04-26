@@ -1,0 +1,60 @@
+name: SDK Release
+
+# Releases the Go SDK submodule. Triggered when a tag of the form
+# `sdk/vX.Y.Z` is pushed -- this is the canonical tag format Go's module
+# system recognises for a submodule rooted at sdk/. Once the tag is pushed
+# and validated, consumers can run:
+#
+#     go get github.com/leonj1/notes/sdk@vX.Y.Z
+
+on:
+  push:
+    tags:
+      - 'sdk/v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: validate + publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache-dependency-path: sdk/go.sum
+
+      - name: Run SDK tests
+        working-directory: sdk
+        run: |
+          go vet ./...
+          go test ./... -race
+
+      - name: Verify git tag matches sdk.Version constant
+        run: |
+          set -euo pipefail
+          tag_version="${GITHUB_REF_NAME#sdk/}"
+          declared=$(grep -oE 'Version = "v[^"]+"' sdk/version.go | head -n1 | sed -E 's/.*"([^"]+)"/\1/')
+          if [ -z "$declared" ]; then
+            echo "could not parse Version from sdk/version.go"; exit 1
+          fi
+          if [ "$tag_version" != "$declared" ]; then
+            echo "tag $tag_version does not match sdk.Version $declared"; exit 1
+          fi
+          echo "verified: $tag_version == $declared"
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          version="${tag#sdk/}"
+          gh release create "$tag" \
+            --title "SDK ${version}" \
+            --notes "Go SDK release ${version}. Install with: \`go get github.com/leonj1/notes/sdk@${version}\`" \
+            --generate-notes
