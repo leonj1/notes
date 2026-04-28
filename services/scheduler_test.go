@@ -52,6 +52,32 @@ func TestIsDueAt(t *testing.T) {
 			want: true,
 		},
 		{
+			name: "given empty allowed_days and allowed_times (every-minute ping), when arbitrary minute, then due",
+			s: models.Schedule{
+				AllowedDays:  "",
+				AllowedTimes: "",
+				ScriptPath:   "echo ping",
+				Status:       models.ScheduleStatusEnabled,
+			},
+			// Wednesday 03:17 — neither a typical weekday nor on-the-hour.
+			// An "always-on" schedule must still match.
+			t:    ts(2024, 1, 3, 3, 17),
+			want: true,
+		},
+		{
+			name: "given empty allowed_days and allowed_times but disabled, then matcher still says due (status filtered upstream by InvokeDueAt)",
+			s: models.Schedule{
+				AllowedDays:  "",
+				AllowedTimes: "",
+				ScriptPath:   "echo ping",
+				Status:       models.ScheduleStatusDisabled,
+			},
+			// IsDueAt only applies day/time/snooze logic. Status filtering
+			// is the responsibility of InvokeDueAt (see TestInvokeDueAt_SkipsDisabled).
+			t:    ts(2024, 1, 3, 3, 17),
+			want: true,
+		},
+		{
 			name: "given Mon 09:00 schedule, when Tue at 09:00, then not due",
 			s:    monAt0900,
 			t:    ts(2024, 4, 23, 9, 0),
