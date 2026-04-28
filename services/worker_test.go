@@ -49,6 +49,127 @@ func TestWorker_ExecutesQuotedCurlCommand(t *testing.T) {
 	}
 }
 
+// TestExecuteSchedule_Success verifies that ExecuteSchedule runs the
+// schedule's script through execScript, builds an audit with status=success,
+// and persists it via saveAudit. Both seams are stubbed so the test never
+// touches the DB or spawns a subprocess.
+func TestExecuteSchedule_Success(t *testing.T) {
+	origExec := execScript
+	origSave := saveAudit
+	defer func() {
+		execScript = origExec
+		saveAudit = origSave
+	}()
+
+	const wantOutput = "ran ok"
+	execScript = func(scriptPath string) ([]byte, error) {
+		if scriptPath != "echo hello" {
+			t.Errorf("execScript got scriptPath=%q, want %q", scriptPath, "echo hello")
+		}
+		return []byte(wantOutput), nil
+	}
+
+	var savedAudit *models.Audit
+	saveAudit = func(a models.Audit) (*models.Audit, error) {
+		// Simulate the DB assigning an id.
+		a.Id = 4242
+		savedAudit = &a
+		return &a, nil
+	}
+
+	sched := &models.Schedule{Id: 11, ScriptPath: "echo hello"}
+	got, err := ExecuteSchedule(sched)
+	if err != nil {
+		t.Fatalf("ExecuteSchedule unexpected error: %v", err)
+	}
+	if got == nil {
+		t.Fatalf("ExecuteSchedule returned nil audit")
+	}
+	if got.Status != models.AuditStatusSuccess {
+		t.Errorf("audit.Status = %q, want %q", got.Status, models.AuditStatusSuccess)
+	}
+	if got.Output != wantOutput {
+		t.Errorf("audit.Output = %q, want %q", got.Output, wantOutput)
+	}
+	if got.Error != "" {
+		t.Errorf("audit.Error = %q, want empty", got.Error)
+	}
+	if got.ScheduleId != 11 {
+		t.Errorf("audit.ScheduleId = %d, want 11", got.ScheduleId)
+	}
+	if got.StartTime.IsZero() || got.EndTime.IsZero() {
+		t.Errorf("audit times not populated: start=%v end=%v", got.StartTime, got.EndTime)
+	}
+	if savedAudit == nil {
+		t.Errorf("saveAudit was not called")
+	}
+}
+
+// TestExecuteSchedule_Failure verifies that a non-zero exit status produces
+// an audit with status=failure and a populated Error string. The persisted
+// audit is still returned so the route can show the user what went wrong.
+func TestExecuteSchedule_Failure(t *testing.T) {
+	origExec := execScript
+	origSave := saveAudit
+	defer func() {
+		execScript = origExec
+		saveAudit = origSave
+	}()
+
+	execScript = func(scriptPath string) ([]byte, error) {
+		return []byte("boom output"), &exec.ExitError{}
+	}
+	var saveCalls int
+	saveAudit = func(a models.Audit) (*models.Audit, error) {
+		saveCalls++
+		a.Id = 99
+		return &a, nil
+	}
+
+	sched := &models.Schedule{Id: 7, ScriptPath: "false"}
+	got, err := ExecuteSchedule(sched)
+	if err != nil {
+		t.Fatalf("ExecuteSchedule unexpected error: %v", err)
+	}
+	if got.Status != models.AuditStatusFailure {
+		t.Errorf("audit.Status = %q, want %q", got.Status, models.AuditStatusFailure)
+	}
+	if got.Output != "boom output" {
+		t.Errorf("audit.Output = %q, want %q", got.Output, "boom output")
+	}
+	if got.Error == "" {
+		t.Errorf("audit.Error must be populated on failure")
+	}
+	if saveCalls != 1 {
+		t.Errorf("saveAudit called %d times, want 1", saveCalls)
+	}
+}
+
+// TestExecuteSchedule_NilSchedule documents the defensive guard: a nil
+// schedule must not panic and must return an error without touching the
+// exec or save seams.
+func TestExecuteSchedule_NilSchedule(t *testing.T) {
+	origExec := execScript
+	origSave := saveAudit
+	defer func() {
+		execScript = origExec
+		saveAudit = origSave
+	}()
+
+	execScript = func(string) ([]byte, error) {
+		t.Fatalf("execScript should not be called for nil schedule")
+		return nil, nil
+	}
+	saveAudit = func(models.Audit) (*models.Audit, error) {
+		t.Fatalf("saveAudit should not be called for nil schedule")
+		return nil, nil
+	}
+
+	if _, err := ExecuteSchedule(nil); err == nil {
+		t.Fatalf("expected error for nil schedule, got nil")
+	}
+}
+
 // TestWorker_RecordsFailureAuditOnShellSyntaxError documents the worker's
 // behaviour when /bin/sh can't parse the script (e.g. unterminated quote).
 // We can't drive runDueSchedules() directly without a DB, but we can verify

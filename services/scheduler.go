@@ -1,6 +1,8 @@
 package services
 
 import (
+	"database/sql"
+	"errors"
 	"notes/clients"
 	"notes/models"
 	"strings"
@@ -49,6 +51,28 @@ func (s *SchedulerService) ClearSnooze(id int64) (*models.Schedule, error) {
 	}
 	sched.SnoozedUntil = nil
 	return clients.UpdateSchedule(*sched)
+}
+
+// RunNow executes the schedule with the given id immediately, regardless of
+// its cron / allowed_days / allowed_times / snooze settings. The script runs
+// synchronously through the same /bin/sh -c path the per-minute worker uses;
+// the resulting audit row is persisted with the same shape as a cron-tick
+// audit. Disabled schedules are still runnable on-demand — that's the whole
+// point of a "run now" button: try it once without flipping it on globally.
+//
+// Returns ErrScheduleNotFound if the id does not resolve to a schedule.
+func (s *SchedulerService) RunNow(id int64) (*models.Audit, error) {
+	sched, err := clients.GetSchedule(id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrScheduleNotFound
+		}
+		return nil, err
+	}
+	if sched == nil {
+		return nil, ErrScheduleNotFound
+	}
+	return ExecuteSchedule(sched)
 }
 
 func (s *SchedulerService) ListEnabled() ([]*models.Schedule, error) {

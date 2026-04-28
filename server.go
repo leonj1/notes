@@ -16,6 +16,7 @@ func newRouter() *vestigo.Router {
 	router.Get("/schedules", routes.ListSchedules)
 	router.Get("/schedules/:id", routes.GetSchedule)
 	router.Delete("/schedules/:id", routes.DeleteSchedule)
+	router.Post("/schedules/:id/run", routes.RunSchedule)
 
 	// audits
 	router.Get("/schedules/:id/audits", routes.ListAuditsBySchedule)
