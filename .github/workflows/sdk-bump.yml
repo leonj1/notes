@@ -36,7 +36,7 @@ concurrency:
 jobs:
   bump:
     name: bump version + tag
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64]
     outputs:
       tag: ${{ steps.compute.outputs.tag }}
       version: ${{ steps.compute.outputs.version }}
